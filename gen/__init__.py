@@ -144,7 +144,7 @@ struct StringView {{
     constexpr StringView() = default;
     constexpr StringView(size_t length, const char* data) : data(data), length(length) {{ }}
     
-    constexpr StringView(const char* str) : data(str), length(strlen(str)) {{ }}
+    constexpr StringView(const char* str) : data(str), length(std::char_traits<char>::length(str)) {{ }}
     constexpr StringView(std::string str) : data(str.data()), length(str.size()) {{ }}
     constexpr StringView(std::string_view str) : data(str.data()), length(str.size()) {{ }}
 

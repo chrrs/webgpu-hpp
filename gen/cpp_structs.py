@@ -19,7 +19,7 @@ class Struct:
         b.append(doc_comment(self.doc))
         b.append(f"struct {no_discard}{self.name} {{\n")
 
-        b.append(indent(1, f"constexpr operator {c_type}() {{ return *reinterpret_cast<{c_type}*>(this); }}\n"))
+        b.append(indent(1, f"operator {c_type}() {{ return *reinterpret_cast<{c_type}*>(this); }}\n"))
 
         if self.has_release:
             c_release_func = f"wgpu{self.name}FreeMembers"
@@ -196,7 +196,7 @@ class Callback:
         b.append(doc_comment(self.doc))
         b.append(f"struct {self.name} {{\n")
 
-        b.append(indent(1, f"constexpr operator {c_type}() {{ return *reinterpret_cast<{c_type}*>(this); }}\n"))
+        b.append(indent(1, f"operator {c_type}() {{ return *reinterpret_cast<{c_type}*>(this); }}\n"))
 
         b.append('\n')
         b.append(indent(1, 'ChainedStruct* next {};\n'))
