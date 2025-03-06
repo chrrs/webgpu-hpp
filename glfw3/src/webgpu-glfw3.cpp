@@ -46,11 +46,8 @@ wgpu::Surface wgpu::glfw3::createWindowSurface(wgpu::Instance instance, GLFWwind
     case GLFW_PLATFORM_COCOA: {
             id metalLayer = [CAMetalLayer layer];
             NSWindow *nsWindow = glfwGetCocoaWindow(window);
-            [ns_window.contentView setWantsLayer:YES];
-            [ns_window.contentView setLayer:metalLayer];
-
-            nsWindow.contentView.wantsLayer = YES;
-            nsWindow.contentView.layer = metalLayer;
+            [nsWindow.contentView setWantsLayer:YES];
+            [nsWindow.contentView setLayer:metalLayer];
 
             SurfaceSourceMetalLayer surfaceSource {
                 .layer = metalLayer,
