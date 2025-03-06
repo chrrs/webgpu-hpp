@@ -35,15 +35,13 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4f {
 
 class Engine {
 public:
-    Engine()
-    {
-        create_window();
-        initialize_wgpu();
-        create_pipeline();
+    Engine() {
+        createWindow();
+        initializeWGPU();
+        createPipeline();
     }
 
-    ~Engine()
-    {
+    ~Engine() {
         m_pipeline.release();
 
         m_surface.unconfigure();
@@ -56,51 +54,50 @@ public:
         glfwTerminate();
     }
 
-    void run()
-    {
+    void run() {
         while (!glfwWindowShouldClose(m_window)) {
             glfwPollEvents();
 
-            auto surface_texture = get_surface_texture();
-            auto target_view = get_surface_texture_view(surface_texture);
+            auto surfaceTexture = getSurfaceTexture();
+            auto targetView = getSurfaceTextureView(surfaceTexture);
 
             // Create command encoder
-            wgpu::CommandEncoderDescriptor encoder_descriptor {};
-            auto encoder = m_device.createCommandEncoder(&encoder_descriptor);
+            wgpu::CommandEncoderDescriptor encoderDescriptor {};
+            auto encoder = m_device.createCommandEncoder(&encoderDescriptor);
 
             // Encode render pass
-            wgpu::RenderPassColorAttachment color_attachment {
-                .view = target_view,
+            wgpu::RenderPassColorAttachment colorAttachment {
+                .view = targetView,
                 .depthSlice = WGPU_DEPTH_SLICE_UNDEFINED,
                 .loadOp = wgpu::LoadOp::Clear,
                 .storeOp = wgpu::StoreOp::Store,
                 .clearValue = { 0.0f, 0.0f, 0.0f, 1.0f },
             };
 
-            wgpu::RenderPassDescriptor render_pass_descriptor {
-                .colorAttachments = { 1, &color_attachment },
+            wgpu::RenderPassDescriptor renderPassDescriptor {
+                .colorAttachments = { 1, &colorAttachment },
             };
 
             // Tell the renderer what we want to draw
-            auto render_pass = encoder.beginRenderPass(render_pass_descriptor);
+            auto renderPass = encoder.beginRenderPass(renderPassDescriptor);
 
-            render_pass.setPipeline(m_pipeline);
-            render_pass.draw(3, 1, 0, 0);
+            renderPass.setPipeline(m_pipeline);
+            renderPass.draw(3, 1, 0, 0);
 
-            render_pass.end();
-            render_pass.release();
+            renderPass.end();
+            renderPass.release();
 
             // Submit encoder
-            wgpu::CommandBufferDescriptor command_buffer_descriptor {};
-            auto command_buffer = encoder.finish(&command_buffer_descriptor);
+            wgpu::CommandBufferDescriptor commandBufferDescriptor {};
+            auto commandBuffer = encoder.finish(&commandBufferDescriptor);
             encoder.release();
 
-            m_queue.submit({ 1, &command_buffer });
-            command_buffer.release();
-            target_view.release();
+            m_queue.submit({ 1, &commandBuffer });
+            commandBuffer.release();
+            targetView.release();
 
             m_surface.present();
-            surface_texture.release();
+            surfaceTexture.release();
 
             wgpu::platform::tickDevice(m_device);
         }
@@ -112,8 +109,7 @@ public:
     Engine& operator=(Engine&&) = delete;
 
 private:
-    void create_window()
-    {
+    void createWindow() {
         assert(glfwInit());
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -122,13 +118,12 @@ private:
         assert(m_window);
     }
 
-    void initialize_wgpu()
-    {
+    void initializeWGPU() {
         // Set up WGPU platform logging
         wgpu::platform::setLogLevel(wgpu::platform::LogLevel::Info);
         wgpu::platform::setLogCallback(
             [](wgpu::platform::LogLevel level, wgpu::StringView message, void*) {
-                spdlog::level::level_enum spd_level = level == wgpu::platform::LogLevel::Trace
+                spdlog::level::level_enum spdLevel = level == wgpu::platform::LogLevel::Trace
                     ? spdlog::level::trace
                     : level == wgpu::platform::LogLevel::Debug
                     ? spdlog::level::debug
@@ -137,7 +132,7 @@ private:
                     : level == wgpu::platform::LogLevel::Warn
                     ? spdlog::level::warn
                     : spdlog::level::err;
-                spdlog::log(spd_level, "wgpu log: {}", static_cast<std::string_view>(message));
+                spdlog::log(spdLevel, "wgpu log: {}", static_cast<std::string_view>(message));
             },
             nullptr);
 
@@ -149,7 +144,7 @@ private:
         m_surface = wgpu::glfw3::createWindowSurface(instance, m_window);
         assert(m_surface);
 
-        wgpu::RequestAdapterOptions adapter_options {
+        wgpu::RequestAdapterOptions adapterOptions {
             .powerPreference = wgpu::PowerPreference::HighPerformance,
             .compatibleSurface = m_surface,
         };
@@ -157,10 +152,10 @@ private:
         wgpu::Adapter adapter;
 
         bool success = false;
-        wgpu::RequestAdapterCallbackInfo adapter_callback_info {
-            .callback = [](wgpu::RequestAdapterStatus status, wgpu::Adapter adapter, wgpu::StringView message, void* adapter_ptr, void* success) {
+        wgpu::RequestAdapterCallbackInfo adapterCallbackInfo {
+            .callback = [](wgpu::RequestAdapterStatus status, wgpu::Adapter adapter, wgpu::StringView message, void* adapterPtr, void* success) {
                 if (status == wgpu::RequestAdapterStatus::Success) {
-                    *static_cast<wgpu::Adapter*>(adapter_ptr) = adapter;
+                    *static_cast<wgpu::Adapter*>(adapterPtr) = adapter;
                     *static_cast<bool*>(success) = true;
                 } else {
                     spdlog::error("failed to request adapter: {}", static_cast<std::string_view>(message));
@@ -170,19 +165,19 @@ private:
             .userdata2 = &success,
         };
 
-        instance.requestAdapter(&adapter_options, adapter_callback_info);
+        instance.requestAdapter(&adapterOptions, adapterCallbackInfo);
         assert(success);
 
         instance.release();
 
-        wgpu::AdapterInfo adapter_info;
-        adapter.getInfo(adapter_info);
+        wgpu::AdapterInfo adapterInfo;
+        adapter.getInfo(adapterInfo);
         std::array backends { "Undefined", "Null", "WebGPU", "DirectX 11",
             "DirectX 12", "Metal", "Vulkan", "OpenGL", "OpenGL ES" };
-        spdlog::info("using {} ({})", static_cast<std::string_view>(adapter_info.device), backends[static_cast<uint32_t>(adapter_info.backendType)]);
+        spdlog::info("using {} ({})", static_cast<std::string_view>(adapterInfo.device), backends[static_cast<uint32_t>(adapterInfo.backendType)]);
 
         // Request device
-        wgpu::DeviceDescriptor device_descriptor {
+        wgpu::DeviceDescriptor deviceDescriptor {
             .deviceLostCallbackInfo = {
                 .callback = [](wgpu::Device const&, wgpu::DeviceLostReason, wgpu::StringView message, void*, void*) {
                     spdlog::error("device lost: {}", static_cast<std::string_view>(message));
@@ -196,10 +191,10 @@ private:
         };
 
         success = false;
-        wgpu::RequestDeviceCallbackInfo device_callback_info {
-            .callback = [](wgpu::RequestDeviceStatus status, wgpu::Device device, wgpu::StringView message, void* device_ptr, void* success) {
+        wgpu::RequestDeviceCallbackInfo deviceCallbackInfo {
+            .callback = [](wgpu::RequestDeviceStatus status, wgpu::Device device, wgpu::StringView message, void* devicePtr, void* success) {
                 if (status == wgpu::RequestDeviceStatus::Success) {
-                    *static_cast<wgpu::Device*>(device_ptr) = device;
+                    *static_cast<wgpu::Device*>(devicePtr) = device;
                     *static_cast<bool*>(success) = true;
                 } else {
                     spdlog::error("failed to request device: {}", static_cast<std::string_view>(message));
@@ -209,22 +204,22 @@ private:
             .userdata2 = &success,
         };
 
-        adapter.requestDevice(&device_descriptor, device_callback_info);
+        adapter.requestDevice(&deviceDescriptor, deviceCallbackInfo);
         assert(success);
 
         // Fetch queue
         m_queue = m_device.getQueue();
 
         // Configure surface
-        wgpu::SurfaceCapabilities surface_capabilities {};
-        auto status = m_surface.getCapabilities(adapter, surface_capabilities);
-        if (status != wgpu::Status::Success)
-            throw std::runtime_error("failed to get surface capabilities");
-        m_surface_format = surface_capabilities.formats[0];
+        wgpu::SurfaceCapabilities surfaceCapabilities {};
+        auto status = m_surface.getCapabilities(adapter, surfaceCapabilities);
+        assert(status == wgpu::Status::Success);
 
-        wgpu::SurfaceConfiguration surface_config {
+        m_surfaceFormat = surfaceCapabilities.formats[0];
+
+        wgpu::SurfaceConfiguration surfaceConfig {
             .device = m_device,
-            .format = m_surface_format,
+            .format = m_surfaceFormat,
             .usage = wgpu::TextureUsage::RenderAttachment,
             .width = 800,
             .height = 600,
@@ -232,27 +227,26 @@ private:
             .presentMode = wgpu::PresentMode::Fifo,
         };
 
-        m_surface.configure(surface_config);
+        m_surface.configure(surfaceConfig);
 
         adapter.release();
     }
 
-    void create_pipeline()
-    {
+    void createPipeline() {
         // Load shaders
-        wgpu::ShaderSourceWGSL shader_source {
+        wgpu::ShaderSourceWGSL shaderSource {
             .code = WGSL_SHADER_SOURCE,
         };
 
-        wgpu::ShaderModuleDescriptor shader_module_descriptor {
-            .next = &shader_source.chain,
+        wgpu::ShaderModuleDescriptor shaderModuleDescriptor {
+            .next = &shaderSource.chain,
             .label = "Triangle Shader",
         };
 
-        auto shader_module = m_device.createShaderModule(shader_module_descriptor);
+        auto shaderModule = m_device.createShaderModule(shaderModuleDescriptor);
 
         // Create pipeline
-        wgpu::BlendState blend_state {
+        wgpu::BlendState blendState {
             .color = {
                 .operation = wgpu::BlendOperation::Add,
                 .srcFactor = wgpu::BlendFactor::SrcAlpha,
@@ -265,21 +259,21 @@ private:
             },
         };
 
-        wgpu::ColorTargetState color_target {
-            .format = m_surface_format,
-            .blend = &blend_state,
+        wgpu::ColorTargetState colorTarget {
+            .format = m_surfaceFormat,
+            .blend = &blendState,
             .writeMask = wgpu::ColorWriteMask::All,
         };
 
-        wgpu::FragmentState fragment_state {
-            .module = shader_module,
+        wgpu::FragmentState fragmentState {
+            .module = shaderModule,
             .entryPoint = "fs_main",
-            .targets = { 1, &color_target },
+            .targets = { 1, &colorTarget },
         };
 
-        wgpu::RenderPipelineDescriptor pipeline_descriptor {
+        wgpu::RenderPipelineDescriptor pipelineDescriptor {
             .vertex = {
-                .module = shader_module,
+                .module = shaderModule,
                 .entryPoint = "vs_main",
             },
             .primitive = {
@@ -292,37 +286,35 @@ private:
                 .count = 1,
                 .mask = ~static_cast<uint32_t>(0),
             },
-            .fragment = &fragment_state,
+            .fragment = &fragmentState,
         };
 
-        m_pipeline = m_device.createRenderPipeline(pipeline_descriptor);
+        m_pipeline = m_device.createRenderPipeline(pipelineDescriptor);
         assert(m_pipeline);
 
-        shader_module.release();
+        shaderModule.release();
     }
 
     /// Return the texture from the current surface
-    [[nodiscard]] wgpu::Texture get_surface_texture()
-    {
-        wgpu::SurfaceTexture surface_texture {};
-        m_surface.getCurrentTexture(surface_texture);
+    [[nodiscard]] wgpu::Texture getSurfaceTexture() {
+        wgpu::SurfaceTexture surfaceTexture {};
+        m_surface.getCurrentTexture(surfaceTexture);
 
-        if (surface_texture.status != wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal
-            && surface_texture.status != wgpu::SurfaceGetCurrentTextureStatus::SuccessSuboptimal) {
+        if (surfaceTexture.status != wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal
+            && surfaceTexture.status != wgpu::SurfaceGetCurrentTextureStatus::SuccessSuboptimal) {
             return {};
         }
 
-        return surface_texture.texture;
+        return surfaceTexture.texture;
     }
 
     /// Return a texture view into the current surface texture
-    [[nodiscard]] static wgpu::TextureView get_surface_texture_view(wgpu::Texture surface_texture)
-    {
+    [[nodiscard]] static wgpu::TextureView getSurfaceTextureView(wgpu::Texture surfaceTexture) {
 
         // Create a new texture view
-        wgpu::TextureViewDescriptor texture_view_descriptor {
+        wgpu::TextureViewDescriptor textureViewDescriptor {
             .label = "Surface Texture View",
-            .format = surface_texture.getFormat(),
+            .format = surfaceTexture.getFormat(),
             .dimension = wgpu::TextureViewDimension::_2D,
             .baseMipLevel = 0,
             .mipLevelCount = 1,
@@ -331,7 +323,7 @@ private:
             .aspect = wgpu::TextureAspect::All,
         };
 
-        return surface_texture.createView(&texture_view_descriptor);
+        return surfaceTexture.createView(&textureViewDescriptor);
     }
 
     GLFWwindow* m_window {};
@@ -339,13 +331,12 @@ private:
     wgpu::Device m_device {};
     wgpu::Queue m_queue {};
 
-    wgpu::TextureFormat m_surface_format {};
+    wgpu::TextureFormat m_surfaceFormat {};
     wgpu::Surface m_surface {};
     wgpu::RenderPipeline m_pipeline {};
 };
 
-int main()
-{
+int main() {
     spdlog::set_level(spdlog::level::trace);
 
     Engine engine;
