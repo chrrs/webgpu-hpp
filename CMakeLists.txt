@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 project(webgpu-hpp)
+set(CMAKE_CXX_STANDARD 20)
 
 find_package(Python3 COMPONENTS Interpreter)
 
@@ -89,4 +90,9 @@ endfunction()
 # If we're the top level project, also detect the example project.
 if (PROJECT_IS_TOP_LEVEL)
     add_subdirectory(example)
+endif ()
+
+# Add the webgpu-glfw3-hpp library
+if (TARGET glfw)
+    add_subdirectory(glfw3)
 endif ()

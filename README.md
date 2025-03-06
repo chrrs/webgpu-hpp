@@ -304,6 +304,17 @@ The WebGPU standard and webgpu-native both do not provide an easy way to create 
 This header contains a single function `wgpu::glfw3::createWindowSurface(wgpu::Instance, GLFWwindow*)`, which will
 create the window surface for the given GLFW window.
 
+---
+
+As this header has some source files attached, you'll need to link it to your project:
+
+```cmake
+target_link_libraries(MyProject PRIVATE glfw webgpu-hpp webgpu-glfw3-hpp)
+```
+
+For this to work, *make sure that the webgpu-cpp CMake file is evaluated **after** GLFW!* This is so webgpu-glfw3-hpp
+can link against GLFW.
+
 ### `<webgpu/webgpu-platform.hpp>`
 
 > [!WARNING]

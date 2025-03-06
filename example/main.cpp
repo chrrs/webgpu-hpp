@@ -1,6 +1,7 @@
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-#include <spdlog/spdlog.h>
 
+#include <spdlog/spdlog.h>
 #include <webgpu/webgpu-glfw3.hpp>
 #include <webgpu/webgpu-platform.hpp>
 #include <webgpu/webgpu.hpp>

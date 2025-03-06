@@ -94,6 +94,7 @@ def generate_webgpu_hpp(spec: any):
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 
 #include <array>
 #include <span>
