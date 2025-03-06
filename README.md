@@ -50,7 +50,7 @@ wgpu::RenderPassColorAttachment colorAttachment {
 };
 
 wgpu::RenderPassDescriptor descriptor {
-    .colorAttachments = &colorAttachment,
+    .colorAttachments = { 1, &colorAttachment },
 };
 
 auto renderPass = encoder.beginRenderPass(descriptor);
