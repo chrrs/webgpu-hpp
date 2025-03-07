@@ -128,10 +128,10 @@ struct Array {{
     constexpr Array(size_t count, T* data) : count(count), data(data) {{ }}
     
     constexpr Array(std::span<T> span) : count(span.size()), data(span.data()) {{ }}
-    constexpr Array(std::vector<T> vector) : count(vector.size()), data(vector.data()) {{ }}
+    constexpr Array(const std::vector<T>& vector) : count(vector.size()), data(vector.data()) {{ }}
     
     template <size_t N>
-    constexpr Array(std::array<T, N> array) : count(N), data(array.data()) {{ }}
+    constexpr Array(const std::array<T, N>& array) : count(N), data(array.data()) {{ }}
 
     constexpr T& operator[](size_t index) {{ return data[index]; }}
     constexpr T const& operator[](size_t index) const {{ return data[index]; }}
@@ -145,7 +145,7 @@ struct StringView {{
     constexpr StringView(size_t length, const char* data) : data(data), length(length) {{ }}
     
     constexpr StringView(const char* str) : data(str), length(std::char_traits<char>::length(str)) {{ }}
-    constexpr StringView(std::string str) : data(str.data()), length(str.size()) {{ }}
+    constexpr StringView(const std::string& str) : data(str.data()), length(str.size()) {{ }}
     constexpr StringView(std::string_view str) : data(str.data()), length(str.size()) {{ }}
 
     constexpr operator WGPUStringView() const {{ return {{ data, length }}; }}
